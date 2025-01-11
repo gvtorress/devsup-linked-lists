@@ -2,21 +2,28 @@ class Node {
   constructor(value) {
     this.value = value;
     this.next = null;
+    this.prev = null;
   }
 
   updateNext(pointer) {
     this.next = pointer;
   }
+
+  updatePrev(pointer) {
+    this.prev = pointer;
+  }
 }
 
-export class LinkedList {
+export class DoublyLinkedList {
   constructor() {
     this.head = null;
+    this.tail = null;
     this.size = 0;
   }
 
   clear = () => {
     this.head = null;
+    this.tail = null;
     this.size = 0;
   }
   
@@ -34,14 +41,14 @@ export class LinkedList {
 
     if (this.isEmpty()) {
       this.head = node;
+      this.tail = node;
       this.size++
       return;
     }
 
-    const aux = this.head;
-    
+    node.next = this.head;
+    this.head.prev = node;
     this.head = node;
-    node.next = aux;
     this.size++;
   }
   
@@ -50,16 +57,14 @@ export class LinkedList {
 
     if (this.head === null) {
       this.head = node;
+      this.tail = node;
       this.size++;
       return;
     }
 
-    let current = this.head;
-
-    while (current.next) {
-      current = current.next;
-    }
-    current.next = node;
+    node.prev = this.tail;
+    this.tail.next = node;
+    this.tail = node;
     this.size++;
   }
   
@@ -69,14 +74,16 @@ export class LinkedList {
       return;
     }
     
-    if (!this.get(index)) {
+    if (!this.get(index) || index === this.getSize()) {
       this.addAtEnd(elem);
       return;
     }
     
-    let node = new Node(elem);
+    const node = new Node(elem);
     let aux = this.getNode(index - 1);
+    aux.next.prev = node;
     node.next = aux.next;
+    node.prev = aux;
     aux.next = node;
     this.size++;
   }
@@ -92,7 +99,7 @@ export class LinkedList {
 
     let current = this.head;
     let i = 0;
-    while (i !== index) {
+    while (current !== null &&i !== index) {
       current = current.next;
       i++;
     }
@@ -117,39 +124,77 @@ export class LinkedList {
     return -1;
   }
 
+  removeHead = () => {
+    if (this.isEmpty()) return null;
+
+    const node = this.head;
+    this.head = this.head.next;
+
+    if (this.head === null) {
+      this.tail = null;
+    } else {
+      this.head.prev = null;
+    }
+    this.size--;
+
+    return node;
+  }
+
+  removeTail = () => {
+    if (this.isEmpty()) return null;
+
+    const node = this.tail;
+    this.tail = this.tail.prev;
+
+    if (this.tail === null) {
+      this.head = null;
+    } else {
+      this.tail.next = null;
+    }
+    this.size--;
+
+    return node;
+  }
+
   removeAtPosition = (index) => {
     if (this.isEmpty() || !this.get(index)) return null;
 
-    let item = null;
     let aux = null;
 
-    if (index === 0) {
-      item = this.head.value;
-      this.head = this.head.next;
-      this.size--;
-      return item;
-    }
+    if (index === 0) return this.removeHead().value;
 
-    if (index === this.getSize() - 1) {
-      item = this.get(index);
-      aux = this.getNode(index - 1);
-      aux.next = null;
-      this.size--;
-      return item;
-    }
+    if (index === this.getSize() - 1) return this.removeTail().value;
 
-    aux = this.getNode(index - 1);
-    item = aux.next.value;
-    aux.next = aux.next.next;
+    aux = this.getNode(index);
+    aux.prev.next = aux.next
+    aux.next.prev = aux.prev
     this.size--;
-    return item;
+    return aux.value;
   }
 
   remove = (elem) => {
     const index = this.indexOf(elem);
     if (this.isEmpty() || index === -1) return false;
-    this.removeAtPosition(index)
+    this.removeAtPosition(index);
     return true;
+  }
+
+  reverse = () => {
+    const nodeHead = this.head;
+    const nodeTail = this.tail;
+
+    this.head = nodeTail;
+    this.tail = nodeHead;
+    
+    let current = nodeHead;
+    let aux = null;
+
+    while (current) {
+      aux = current.next;
+      current.next = current.prev;
+      current.prev = aux;
+      current = aux;
+    }
   }
 
   toArray = () => {
@@ -164,7 +209,7 @@ export class LinkedList {
     return vect;
   }
 
-  printLinkedList = () => {
+  printDoublyLinkedList = () => {
     let current = this.head;
     while (current !== null) {
       console.log(current.value);
@@ -172,30 +217,3 @@ export class LinkedList {
     }
   }
 }
-
-let linkedList = new LinkedList();
-// console.log(`Lista vazia? ${linkedList.isEmpty()}`);
-// console.log(`Tamanho da Lista: ${linkedList.getSize()}`);
-
-linkedList.addAtEnd(20);
-linkedList.addAtEnd(9);
-linkedList.addAtEnd(86);
-linkedList.addAtEnd(-2);
-linkedList.addAtEnd(16);
-linkedList.addAtEnd(23);
-
-linkedList.addAtStart(13);
-
-// console.log(`Lista vazia? ${linkedList.isEmpty()}`);
-// console.log(`Tamanho da Lista: ${linkedList.getSize()}`);
-// console.log(linkedList.get(3));
-// linkedList.addAtPosition(3, 40);
-// linkedList.printLinkedList();
-// console.log(linkedList.indexOf(86));
-// console.log(linkedList.indexOf(87));
-
-// console.log(`Removendo item da posicao 2: ${linkedList.removeAtPosition(2)}`)
-// console.log(`Removendo item da posicao 3: ${linkedList.removeAtPosition(3)}`)
-// linkedList.printLinkedList();
-
-linkedList.clear();
